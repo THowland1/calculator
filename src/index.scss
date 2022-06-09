@@ -1,0 +1,252 @@
+$width: 400px;
+$button-column-count: 4;
+$button-row-count: 5;
+$button-gap: 50px;
+$button-diameter: ($width - ($button-gap * $button-column-count)) /
+  $button-column-count;
+
+:root {
+  --calculator-width: 400px;
+  --calculator-height: 700px;
+}
+
+html,
+body {
+  inset: 0;
+  position: absolute;
+}
+body {
+  background-color: rgb(62, 62, 62);
+  user-select: none;
+  -webkit-user-select: none;
+  margin: auto;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.calculator {
+  background-color: black;
+  max-height: var(--calculator-height);
+  max-width: var(--calculator-width);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.display {
+  flex: 1;
+  color: white;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 2rem;
+  align-items: end;
+  font-size: calc(var(--calculator-width) / 4);
+  font-weight: 200;
+  font-family: system-ui;
+}
+
+.buttons {
+  display: grid;
+  grid-template-columns: repeat(4, calc(var(--calculator-width) / 5));
+  grid-template-rows: repeat(5, calc(var(--calculator-width) / 5));
+  gap: calc(var(--calculator-width) / 25);
+  padding: calc(var(--calculator-width) / 25);
+}
+
+@mixin button-light {
+  &::after {
+    @content;
+    background-color: #a5a5a5;
+    color: #000000;
+  }
+
+  &:hover::after {
+    background-color: #d9d9d9;
+  }
+}
+@mixin button-mid {
+  &::after {
+    @content;
+    background-color: #333333;
+    color: #ffffff;
+  }
+
+  &:hover::after {
+    background-color: #737373;
+  }
+}
+@mixin button-primary {
+  &::after {
+    @content;
+    background-color: #f1a33b;
+    color: #ffffff;
+  }
+
+  &:hover::after {
+    background-color: #f4c995;
+  }
+}
+@mixin button-primary-inverted {
+  &::after {
+    @content;
+    color: #f1a33b;
+    background-color: #ffffff;
+  }
+
+  &:hover::after {
+    background-color: #f4c995;
+  }
+}
+
+[data-key]::after {
+  background-size: auto 40%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+[data-key='c'] {
+  @include button-light {
+    background-image: url(./images/icons/000000/c.svg);
+  }
+}
+[data-key='sign'] {
+  @include button-light {
+    background-image: url(./images/icons/000000/sign.svg);
+  }
+}
+[data-key='percent'] {
+  @include button-light {
+    background-image: url(./images/icons/000000/percent.svg);
+  }
+}
+[data-key='divide'] {
+  @include button-primary {
+    background-image: url(./images/icons/FFFFFF/divide.svg);
+  }
+  &[data-selected] {
+    @include button-primary-inverted {
+      background-image: url(./images/icons/F1A33B/divide.svg);
+    }
+  }
+}
+
+[data-key='7'] {
+  @include button-mid {
+    background-image: url(./images/icons/FFFFFF/7.svg);
+  }
+}
+[data-key='8'] {
+  @include button-mid {
+    background-image: url(./images/icons/FFFFFF/8.svg);
+  }
+}
+[data-key='9'] {
+  @include button-mid {
+    background-image: url(./images/icons/FFFFFF/9.svg);
+  }
+}
+[data-key='times'] {
+  @include button-primary {
+    background-image: url(./images/icons/FFFFFF/times.svg);
+  }
+  &[data-selected] {
+    @include button-primary-inverted {
+      background-image: url(./images/icons/F1A33B/times.svg);
+    }
+  }
+}
+
+[data-key='4'] {
+  @include button-mid {
+    background-image: url(./images/icons/FFFFFF/4.svg);
+  }
+}
+[data-key='5'] {
+  @include button-mid {
+    background-image: url(./images/icons/FFFFFF/5.svg);
+  }
+}
+[data-key='6'] {
+  @include button-mid {
+    background-image: url(./images/icons/FFFFFF/6.svg);
+  }
+}
+[data-key='minus'] {
+  @include button-primary {
+    background-image: url(./images/icons/FFFFFF/minus.svg);
+  }
+  &[data-selected] {
+    @include button-primary-inverted {
+      background-image: url(./images/icons/F1A33B/minus.svg);
+    }
+  }
+}
+[data-key='1'] {
+  @include button-mid {
+    background-image: url(./images/icons/FFFFFF/1.svg);
+  }
+}
+[data-key='2'] {
+  @include button-mid {
+    background-image: url(./images/icons/FFFFFF/2.svg);
+  }
+}
+[data-key='3'] {
+  @include button-mid {
+    background-image: url(./images/icons/FFFFFF/3.svg);
+  }
+}
+[data-key='plus'] {
+  @include button-primary {
+    background-image: url(./images/icons/FFFFFF/plus.svg);
+  }
+
+  &[data-selected] {
+    @include button-primary-inverted {
+      background-image: url(./images/icons/F1A33B/plus.svg);
+    }
+  }
+}
+[data-key='0'] {
+  @include button-mid {
+    background-image: url(./images/icons/FFFFFF/0.svg);
+  }
+}
+[data-key='decimal'] {
+  @include button-mid {
+    background-image: url(./images/icons/FFFFFF/decimal.svg);
+  }
+}
+[data-key='equals'] {
+  @include button-primary {
+    background-image: url(./images/icons/FFFFFF/equals.svg);
+  }
+}
+
+button {
+  height: 100%;
+  width: 100%;
+  border: none;
+  background-color: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 0;
+
+  &::after {
+    content: '';
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s;
+    height: 100%;
+    width: 100%;
+    border-radius: var(--calculator-width);
+  }
+
+  &.btn-double {
+    grid-column: span 2;
+  }
+}
