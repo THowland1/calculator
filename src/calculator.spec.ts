@@ -282,6 +282,79 @@ describe('Chaining', () => {
     calculator.press('equals');
     expect(calculator.displayValue).toBe(`${MINUS}13`);
   });
+
+  describe('Back-to-back operations', () => {
+    it('4 + 5 + 6 = 15', async () => {
+      calculator.press('4');
+      calculator.press('plus');
+      calculator.press('5');
+      calculator.press('plus');
+      calculator.press('6');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('15');
+    });
+    it('4 + 5 - 6 = 3', async () => {
+      calculator.press('4');
+      calculator.press('plus');
+      calculator.press('5');
+      calculator.press('minus');
+      calculator.press('6');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('3');
+    });
+    it('4 + 5 x 6 = 34', async () => {
+      calculator.press('4');
+      calculator.press('plus');
+      calculator.press('5');
+      calculator.press('times');
+      calculator.press('6');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('34');
+    });
+    it('4 + 6 / 3 = 6', async () => {
+      calculator.press('4');
+      calculator.press('plus');
+      calculator.press('6');
+      calculator.press('divide');
+      calculator.press('3');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('6');
+    });
+  });
+  describe('"Dangling" operation', () => {
+    it('4 + 5 + = 18', async () => {
+      calculator.press('4');
+      calculator.press('plus');
+      calculator.press('5');
+      calculator.press('plus');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('18');
+    });
+    it('4 + 5 - = 0', async () => {
+      calculator.press('4');
+      calculator.press('plus');
+      calculator.press('5');
+      calculator.press('minus');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('0');
+    });
+    it('4 + 5 x = 29', async () => {
+      calculator.press('4');
+      calculator.press('plus');
+      calculator.press('5');
+      calculator.press('times');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('29');
+    });
+    it('4 + 5 / = 5', async () => {
+      calculator.press('4');
+      calculator.press('plus');
+      calculator.press('5');
+      calculator.press('divide');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('5');
+    });
+  });
 });
 
 describe('Scientific notation', () => {
@@ -339,6 +412,24 @@ describe('Scientific notation', () => {
   });
 });
 
+describe('Error values', () => {
+  it('Should show "Error" when dividing by zero', async () => {
+    calculator.press('1');
+    calculator.press('divide');
+    calculator.press('0');
+    calculator.press('equals');
+    expect(calculator.displayValue).toBe('Error');
+  });
+  it('Should show "Error" when dividing by negative zero', async () => {
+    calculator.press('1');
+    calculator.press('divide');
+    calculator.press('sign');
+    calculator.press('0');
+    calculator.press('equals');
+    expect(calculator.displayValue).toBe('Error');
+  });
+  // TODO - Cannot recover error by multiplying by 0
+});
 describe('Ignoring certain values', () => {
   it('Should ignore 0s when value is 0', async () => {
     expect(calculator.displayValue).toBe('0');
@@ -365,6 +456,43 @@ describe('Ignoring certain values', () => {
 // hitting equals twice runs last operation again
 // 0 error
 // E value
-// round exactly .5 down, not up
 // do the font size
 // copy and paste
+
+// dangling operation
+// // plus/minus => plus/minus => show ans
+// // plus/minus => times/divide => show input
+// // times/divide => plus/minus => show ans
+// // times/divide => times/divide => show ans
+
+// 2 + 3 x 5 / => show 15
+// 2 + 3 x 5 x => show 15
+// 2 + 3 x 5 + => show 17
+// 2 + 3 x 5 - => show 17
+// 2 + 3 x 5 / = 3    // 2 + 3 x 5 / == 2 + ((3 x 5) / "(3 x 5)") = 3
+// 2 + 3 x 5 x = 227  // 2 + 3 x 5 x == 2 + ((3 x 5) x "(3 x 5)") = 227
+// 2 + 3 x 5 + = 34   // 2 + 3 x 5 + == (2 + (3 x 5)) + "(2 + (3 x 5))" = 34
+// 2 + 3 x 5 - = 0    // 2 + 3 x 5 - == (2 + (3 x 5)) - "(2 + (3 x 5))" = 0
+
+// 1 + 2 - 5 x 9 / 4 + 3 - 6 / 9 * 2
+// 1 + 2 - (5 x (9 / 4)) + 3 - ((6 / 9) * 2)
+// 3 - 11.25 + 3 - 1.3333333
+// -5.5833333333
+// WRONG
+// I got -6.58333333 = (-6.25 + 0.33333333333)
+
+//
+// 1 + 2 % = 0.02
+// 2 + 3 % = 0.06
+// 2 * 3 % = 0.03
+// 2 / 3 % = 0.03
+// 2 / 3 % = 0.03
+// 2 - 3 % = 0.06
+// 4 / 5 % = 0.05
+// 4 * 5 % = 0.05
+// 4 + 5 % = 0.2
+// 4 - 5 % = 0.2
+// 4 + 5 + 6 % = 0.06
+// 4 - 5 - 6 % = -0.06
+//
+// 12 +3 = (15) 5 = 8
