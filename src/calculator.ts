@@ -14,6 +14,11 @@ type Mode =
   | 'ans-with-op';
 
 type HistoryItem = Fraction | Op | Equals;
+interface Ans {
+  lastNumber: Fraction | null;
+  lastOp: Op | null;
+  ans: Fraction;
+}
 
 function isOp(val: Fraction | string): val is Op {
   return (
@@ -22,8 +27,27 @@ function isOp(val: Fraction | string): val is Op {
   );
 }
 
-function shrinkHistory(history: HistoryItem[]): HistoryItem[] {
+// 1 + 3 = (4) = 7
+// 1 + 3 = (4) * = 16
+// 1 + 3 = (4) * 7 = 28
+// 1 + 3 = (4) 7 = 10
+// 1 + 3 = (4) 7 * = 49
+function shrinkHistories(history: HistoryItem[]): Ans {
+  const indexOfEquals = history.lastIndexOf('equals');
+  const before = history.slice(0, Math.max(indexOfEquals - 1, 0));
+  const after = history.slice(indexOfEquals + 2);
+  const beforeShrunk = shrinkHistory(before);
+
+  return beforeShrunk;
+}
+
+function shrinkHistory(history: HistoryItem[]): Ans {
   let compressedHistory = [...history];
+
+  if (isOp(compressedHistory.at(-1) ?? '')) {
+    compressedHistory.push(getLocalValue(compressedHistory));
+  }
+
   const ops: [Op, (left: Fraction, right: Fraction) => Fraction][] = [
     ['divide', Fraction.divide],
     ['times', Fraction.times],
@@ -55,7 +79,40 @@ function shrinkHistory(history: HistoryItem[]): HistoryItem[] {
       compressedHistory = [...before, newValue, ...after];
     }
   }
-  return compressedHistory;
+
+  const historyOps = history.filter((o) => isOp(o)) as Op[];
+  const historyNumbers = history.filter(
+    (o) => o instanceof Fraction
+  ) as Fraction[];
+
+  const ans = compressedHistory[0] ?? new Fraction(0);
+  if (!(ans instanceof Fraction)) {
+    throw new Error('Must shrink down to one answer');
+  }
+
+  return {
+    lastNumber: historyNumbers.at(-1) ?? null,
+    lastOp: historyOps.at(-1) ?? null,
+    ans: compressedHistory[0] as Fraction,
+  };
+}
+
+function getLocalValue(history: HistoryItem[]): Fraction {
+  const lastItem = history[history.length - 1];
+  switch (lastItem) {
+    case 'times':
+    case 'divide':
+      const lastPlusIndex = history.lastIndexOf('plus');
+      const lastMinusIndex = history.lastIndexOf('minus');
+      const start = Math.max(lastPlusIndex + 1, lastMinusIndex + 1);
+      return shrinkHistory(history.slice(start, -1)).ans;
+    case 'plus':
+    case 'minus':
+    case 'equals':
+      return shrinkHistory(history.slice(0, -1)).ans;
+    default:
+      return lastItem;
+  }
 }
 
 export class Calculator {
@@ -92,32 +149,11 @@ export class Calculator {
   // 1 + 2 * 3 * => 1 + (2 * 3 * ?) => show 6
   // 1 + 2 * 3 + => 1 + (2 * 3) + ? => show 7
   private get currentValue() {
-    return shrinkHistory(this.history);
+    return shrinkHistories(this.history);
   }
 
   private get localValue() {
-    const lastItem = this.history[this.history.length - 1];
-    switch (lastItem) {
-      case 'times':
-      case 'divide':
-        const lastPlusIndex = this.history.lastIndexOf('plus');
-        const lastMinusIndex = this.history.lastIndexOf('minus');
-        const start = Math.max(lastPlusIndex + 1, lastMinusIndex + 1);
-        console.log({
-          lastPlusIndex,
-          lastMinusIndex,
-          start,
-          boob2: this.history,
-          boob: this.history.slice(start, -1),
-        });
-        return shrinkHistory(this.history.slice(start, -1))[0] as Fraction;
-      case 'plus':
-      case 'minus':
-      case 'equals':
-        return shrinkHistory(this.history.slice(0, -1))[0] as Fraction;
-      default:
-        return lastItem;
-    }
+    return getLocalValue(this.history);
   }
 
   get displayValue() {
@@ -128,12 +164,11 @@ export class Calculator {
         (typeof after === 'string' ? `.${after}` : '')
       ).replace('-', '–');
     } else {
-      if (this.errored) {
+      const value = Math.round(this.localValue.toNumber() * 1e8) / 1e8;
+      if (!isFinite(value)) {
         return 'Error';
       }
-      // calculate value so far
 
-      const value = Math.round(this.localValue.toNumber() * 1e8) / 1e8;
       const eValue = Math.log10(Math.abs(value));
       const opts: Intl.NumberFormatOptions = {};
       if (eValue < 9) {
@@ -242,25 +277,6 @@ export class Calculator {
       case 'equals':
         this.history.push(key);
 
-        switch (this.op) {
-          case 'divide':
-            this.ans = Fraction.divide(this.ans, Number(this.input));
-            break;
-          case 'minus':
-            this.ans = Fraction.minus(this.ans, Number(this.input));
-            break;
-          case 'plus':
-            this.ans = Fraction.plus(this.ans, Number(this.input));
-            break;
-          case 'times':
-            this.ans = Fraction.times(this.ans, Number(this.input));
-            break;
-        }
-        this.mode = 'ans';
-        if (!isFinite(this.ans.toNumber())) {
-          this.errored = true;
-        }
-        break;
       case 'c':
         this.input = '0';
         this.ans = new Fraction({ top: 0, bottom: 1 });
