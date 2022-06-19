@@ -13,11 +13,40 @@ type Mode =
   | 'ans'
   | 'ans-with-op';
 
+type EquationItem = Fraction | Op;
 type HistoryItem = Fraction | Op | Equals;
 interface Ans {
-  lastNumber: Fraction | null;
-  lastOp: Op | null;
+  lastNumber: Fraction;
+  lastOp: Op;
   ans: Fraction;
+}
+
+function splitArray<TItem, TSeparator extends TItem = TItem>(
+  arr: TItem[],
+  separator: TSeparator
+): Exclude<TItem, TSeparator>[][] {
+  const result: Exclude<TItem, TSeparator>[][] = [[]];
+  arr.forEach((item) => {
+    if (item === separator) {
+      result.push([]);
+    } else {
+      result.at(-1)!.push(item as Exclude<TItem, TSeparator>);
+    }
+  });
+
+  return result;
+}
+
+function assertEquationValid(history: EquationItem[]) {
+  let lastType: 'op' | 'number';
+
+  history.forEach((item) => {
+    const thisType = isOp(item) ? 'op' : 'number';
+    if (thisType === lastType) {
+      throw new Error('History must alternate between number and operation');
+    }
+    lastType = thisType;
+  });
 }
 
 function isOp(val: Fraction | string): val is Op {
@@ -26,27 +55,118 @@ function isOp(val: Fraction | string): val is Op {
     ['divide', 'plus', 'minus', 'times'].includes(val)
   );
 }
+function isNumber(val: Fraction | string): val is Fraction {
+  return val instanceof Fraction;
+}
 
 // 1 + 3 = (4) = 7
 // 1 + 3 = (4) * = 16
 // 1 + 3 = (4) * 7 = 28
 // 1 + 3 = (4) 7 = 10
 // 1 + 3 = (4) 7 * = 49
-function shrinkHistories(history: HistoryItem[]): Ans {
-  const indexOfEquals = history.lastIndexOf('equals');
-  const before = history.slice(0, Math.max(indexOfEquals - 1, 0));
-  const after = history.slice(indexOfEquals + 2);
-  const beforeShrunk = shrinkHistory(before);
+/**
+ * [] => [ANS, LASTOP, LASTNUMBER]
+ * [OP] => [ANS, OP, ANS]
+ * [OP, NUMBER] => [ANS, OP, NUMBER]
+ * [NUMBER] => [ANS, LASTOP, NUMBER]
+ * [NUMBER, OP] => [NUMBER, OP, NUMBER]
+ */
+function merge(ansBefore: Ans, history: EquationItem[]): EquationItem[] {
+  let inferredHistory = [...history];
+  if (!isNumber(inferredHistory[0])) {
+    inferredHistory = [ansBefore.ans, ...inferredHistory];
+  }
 
-  return beforeShrunk;
+  assertEquationValid(inferredHistory);
+  return inferredHistory;
 }
 
-function shrinkHistory(history: HistoryItem[]): Ans {
+function getCurrentEquation(history: HistoryItem[]): EquationItem[] {
+  // "?"="1+2"="3/5"
+  let equations = splitArray(history, 'equals' as Equals);
+  let latestAns: Ans = {
+    ans: new Fraction(0),
+    lastNumber: new Fraction(0),
+    lastOp: 'plus',
+  };
+  while (equations.length > 1) {
+    const first = equations.shift()!;
+    const firstMerged = merge(latestAns, first);
+    latestAns = evaluateEquation(firstMerged, latestAns);
+    console.log(JSON.stringify(latestAns, null, 2));
+  }
+  console.log(JSON.stringify(equations, null, 2));
+  return merge(latestAns, equations[0]);
+}
+
+// // 1 + 3 = (4) = 7
+// // 1 + 3 = (4) * = 16
+// // 1 + 3 = (4) * 7 = 28
+// // 1 + 3 = (4) 7 = 10
+// // 1 + 3 = (4) 7 * = 49
+// function shrinkHistories(history: HistoryItem[]): Ans {
+//   const indexOfEquals = history.lastIndexOf('equals');
+
+//   if (indexOfEquals < 0) {
+//     return evaluateEquation(history, {
+//       ans: new Fraction(0),
+//       lastNumber: new Fraction(0),
+//       lastOp: 'plus',
+//     });
+//   }
+
+//   const before = history.slice(0, Math.max(indexOfEquals - 1, 0));
+//   if (before.includes('equals')) {
+//     console.warn('equals', indexOfEquals, before, history);
+//   }
+//   let after = history.slice(indexOfEquals + 2);
+//   const beforeShrunk = shrinkHistories(before);
+
+//   if (!(after[0] instanceof Fraction)) {
+//     after = [beforeShrunk.ans, ...after];
+//   }
+//   if (!after.some((o) => isOp(o))) {
+//     after.push(beforeShrunk.lastOp!, beforeShrunk.lastNumber!);
+//   }
+
+//   // this might be wrong, come back later
+//   const afterShrunk = evaluateEquation(after, {
+//     ans: new Fraction(0),
+//     lastNumber: new Fraction(0),
+//     lastOp: 'plus',
+//   });
+
+//   return afterShrunk;
+// }
+
+function evaluateEquation(
+  history: EquationItem[],
+  lastAns: Ans = {
+    ans: new Fraction(0),
+    lastNumber: new Fraction(0),
+    lastOp: 'plus',
+  }
+): Ans {
   let compressedHistory = [...history];
 
-  if (isOp(compressedHistory.at(-1) ?? '')) {
+  // If no op, repeat the op from the last equation (or +0 if this is the first one)
+  if (!compressedHistory.some((item) => isOp(item))) {
+    console.log('NO OPS');
+    console.log(JSON.stringify(compressedHistory, null, 2));
+    compressedHistory.push(lastAns.lastOp, lastAns.lastNumber);
+    console.log(JSON.stringify(lastAns, null, 2));
+    console.log(JSON.stringify(compressedHistory, null, 2));
+  }
+
+  // If it doesn't end with a number, infer the number from the current context
+  if (isOp(compressedHistory.at(-1)!)) {
     compressedHistory.push(getLocalValue(compressedHistory));
   }
+
+  const lastOp = compressedHistory.filter((o) => isOp(o)).at(-1) as Op;
+  const lastNumber = compressedHistory
+    .filter((o) => o instanceof Fraction)
+    .at(-1) as Fraction;
 
   const ops: [Op, (left: Fraction, right: Fraction) => Fraction][] = [
     ['divide', Fraction.divide],
@@ -65,25 +185,22 @@ function shrinkHistory(history: HistoryItem[]): Ans {
       const left = compressedHistory[indexOfOp - 1];
       const right = compressedHistory[indexOfOp + 1];
       if (!(left instanceof Fraction && right instanceof Fraction)) {
+        console.error({
+          compressedHistory,
+          before,
+          after,
+          left,
+          right,
+          op,
+          indexOfOp,
+        });
         throw new Error('left and right must be fractions');
       }
       const newValue = fn(left, right);
-      console.log({
-        compressedHistory,
-        indexOfDivide: indexOfOp,
-        before,
-        after,
-        left,
-        right,
-      });
+
       compressedHistory = [...before, newValue, ...after];
     }
   }
-
-  const historyOps = history.filter((o) => isOp(o)) as Op[];
-  const historyNumbers = history.filter(
-    (o) => o instanceof Fraction
-  ) as Fraction[];
 
   const ans = compressedHistory[0] ?? new Fraction(0);
   if (!(ans instanceof Fraction)) {
@@ -91,13 +208,13 @@ function shrinkHistory(history: HistoryItem[]): Ans {
   }
 
   return {
-    lastNumber: historyNumbers.at(-1) ?? null,
-    lastOp: historyOps.at(-1) ?? null,
-    ans: compressedHistory[0] as Fraction,
+    lastNumber,
+    lastOp,
+    ans,
   };
 }
 
-function getLocalValue(history: HistoryItem[]): Fraction {
+function getLocalValue(history: EquationItem[]): Fraction {
   const lastItem = history[history.length - 1];
   switch (lastItem) {
     case 'times':
@@ -105,11 +222,10 @@ function getLocalValue(history: HistoryItem[]): Fraction {
       const lastPlusIndex = history.lastIndexOf('plus');
       const lastMinusIndex = history.lastIndexOf('minus');
       const start = Math.max(lastPlusIndex + 1, lastMinusIndex + 1);
-      return shrinkHistory(history.slice(start, -1)).ans;
+      return evaluateEquation(history.slice(start, -1)).ans;
     case 'plus':
     case 'minus':
-    case 'equals':
-      return shrinkHistory(history.slice(0, -1)).ans;
+      return evaluateEquation(history.slice(0, -1)).ans;
     default:
       return lastItem;
   }
@@ -149,11 +265,15 @@ export class Calculator {
   // 1 + 2 * 3 * => 1 + (2 * 3 * ?) => show 6
   // 1 + 2 * 3 + => 1 + (2 * 3) + ? => show 7
   private get currentValue() {
-    return shrinkHistories(this.history);
+    return getLocalValue(this.currentEquation);
   }
 
   private get localValue() {
-    return getLocalValue(this.history);
+    return getLocalValue(this.currentEquation);
+  }
+
+  private get currentEquation() {
+    return getCurrentEquation(this.history);
   }
 
   get displayValue() {
@@ -199,6 +319,7 @@ export class Calculator {
       history: this.history,
       currentValue: this.currentValue,
       displayValue: this.displayValue,
+      currentEquation: getCurrentEquation(this.history),
     };
   }
 

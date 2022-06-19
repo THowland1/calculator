@@ -246,41 +246,102 @@ describe('Inversion', () => {
 });
 
 describe('Chaining', () => {
-  it('Should run last operation (divide) twice when equals is double-clicked', async () => {
-    calculator.press('1');
-    calculator.press('divide');
-    calculator.press('7');
-    calculator.press('equals');
-    expect(calculator.displayValue).toBe('0.14285714');
-    calculator.press('equals');
-    expect(calculator.displayValue).toBe('0.02040816');
+  describe('Double-equals', () => {
+    it('Should run last operation (divide) twice when equals is double-clicked', async () => {
+      calculator.press('1');
+      calculator.press('divide');
+      calculator.press('7');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('0.14285714');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('0.02040816');
+    });
+    it('Should run last operation (plus) twice when equals is double-clicked', async () => {
+      calculator.press('1');
+      calculator.press('plus');
+      calculator.press('7');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('8');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('15');
+    });
+    it('Should run last operation (times) twice when equals is double-clicked', async () => {
+      calculator.press('1');
+      calculator.press('times');
+      calculator.press('7');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('7');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('49');
+    });
+    it('Should run last operation (minus) twice when equals is double-clicked', async () => {
+      calculator.press('1');
+      calculator.press('minus');
+      calculator.press('7');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe(`${MINUS}6`);
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe(`${MINUS}13`);
+    });
   });
-  it('Should run last operation (plus) twice when equals is double-clicked', async () => {
-    calculator.press('1');
-    calculator.press('plus');
-    calculator.press('7');
-    calculator.press('equals');
-    expect(calculator.displayValue).toBe('8');
-    calculator.press('equals');
-    expect(calculator.displayValue).toBe('15');
-  });
-  it('Should run last operation (times) twice when equals is double-clicked', async () => {
-    calculator.press('1');
-    calculator.press('times');
-    calculator.press('7');
-    calculator.press('equals');
-    expect(calculator.displayValue).toBe('7');
-    calculator.press('equals');
-    expect(calculator.displayValue).toBe('49');
-  });
-  it('Should run last operation (minus) twice when equals is double-clicked', async () => {
-    calculator.press('1');
-    calculator.press('minus');
-    calculator.press('7');
-    calculator.press('equals');
-    expect(calculator.displayValue).toBe(`${MINUS}6`);
-    calculator.press('equals');
-    expect(calculator.displayValue).toBe(`${MINUS}13`);
+
+  describe('Carrying forward values from last equation', () => {
+    describe('Equation > Equals > Number > Equals', () => {
+      describe('Should run last op on new number', () => {
+        it('1 + 3 = 7 = => 10', async () => {
+          calculator.press('1');
+          calculator.press('plus');
+          calculator.press('3');
+          calculator.press('equals');
+          calculator.press('7');
+          calculator.press('equals');
+          expect(calculator.displayValue).toBe('10');
+        });
+      });
+      describe('Should run last op on new number, even if last op was nested within a bodmas tree', () => {
+        it('12 + 3 / 3 = 15 = => 5', async () => {
+          calculator.press('1');
+          calculator.press('2');
+          calculator.press('plus');
+          calculator.press('3');
+          calculator.press('divide');
+          calculator.press('3');
+          calculator.press('equals');
+          calculator.press('1');
+          calculator.press('5');
+          calculator.press('equals');
+          expect(calculator.displayValue).toBe('5');
+        });
+      });
+    });
+    describe('Equation > Equals > Number > Op > Equals', () => {
+      describe('Should ignore all previous equation values if a new number was typed then an operation', () => {
+        it('1 + 3 = 5 + = => 10', async () => {
+          calculator.press('1');
+          calculator.press('plus');
+          calculator.press('3');
+          calculator.press('equals');
+          calculator.press('5');
+          calculator.press('plus');
+          calculator.press('equals');
+          expect(calculator.displayValue).toBe('10');
+        });
+      });
+    });
+    describe('Equation > Equals > Op > Number > Equals', () => {
+      describe('Should use the answer of the last equation as the left side of the new operation', () => {
+        it('1 + 3 = x 6 = => 24', async () => {
+          calculator.press('1');
+          calculator.press('plus');
+          calculator.press('3');
+          calculator.press('equals');
+          calculator.press('times');
+          calculator.press('6');
+          calculator.press('equals');
+          expect(calculator.displayValue).toBe('24');
+        });
+      });
+    });
   });
 
   describe('Back-to-back operations', () => {
@@ -459,29 +520,7 @@ describe('Ignoring certain values', () => {
 // do the font size
 // copy and paste
 
-// dangling operation
-// // plus/minus => plus/minus => show ans
-// // plus/minus => times/divide => show input
-// // times/divide => plus/minus => show ans
-// // times/divide => times/divide => show ans
-
-// 2 + 3 x 5 / => show 15
-// 2 + 3 x 5 x => show 15
-// 2 + 3 x 5 + => show 17
-// 2 + 3 x 5 - => show 17
-// 2 + 3 x 5 / = 3    // 2 + 3 x 5 / == 2 + ((3 x 5) / "(3 x 5)") = 3
-// 2 + 3 x 5 x = 227  // 2 + 3 x 5 x == 2 + ((3 x 5) x "(3 x 5)") = 227
-// 2 + 3 x 5 + = 34   // 2 + 3 x 5 + == (2 + (3 x 5)) + "(2 + (3 x 5))" = 34
-// 2 + 3 x 5 - = 0    // 2 + 3 x 5 - == (2 + (3 x 5)) - "(2 + (3 x 5))" = 0
-
-// 1 + 2 - 5 x 9 / 4 + 3 - 6 / 9 * 2
-// 1 + 2 - (5 x (9 / 4)) + 3 - ((6 / 9) * 2)
-// 3 - 11.25 + 3 - 1.3333333
-// -5.5833333333
-// WRONG
-// I got -6.58333333 = (-6.25 + 0.33333333333)
-
-//
+// TEST PERCENTAGE
 // 1 + 2 % = 0.02
 // 2 + 3 % = 0.06
 // 2 * 3 % = 0.03
@@ -496,3 +535,9 @@ describe('Ignoring certain values', () => {
 // 4 - 5 - 6 % = -0.06
 //
 // 12 +3 = (15) 5 = 8
+
+// TEST CANCEL
+// C
+// AC
+
+// Improve lowest-common logic
