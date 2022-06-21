@@ -14,7 +14,7 @@ type Mode =
   | 'ans-with-op';
 
 type EquationItem = Fraction | Op;
-type HistoryItem = Fraction | Op | Equals;
+type HistoryItem = Fraction | Op | Equals; // | Sign;
 interface Ans {
   lastNumber: Fraction;
   lastOp: Op;
@@ -93,9 +93,7 @@ function getCurrentEquation(history: HistoryItem[]): EquationItem[] {
     const first = equations.shift()!;
     const firstMerged = merge(latestAns, first);
     latestAns = evaluateEquation(firstMerged, latestAns);
-    console.log(JSON.stringify(latestAns, null, 2));
   }
-  console.log(JSON.stringify(equations, null, 2));
   return merge(latestAns, equations[0]);
 }
 
@@ -151,11 +149,7 @@ function evaluateEquation(
 
   // If no op, repeat the op from the last equation (or +0 if this is the first one)
   if (!compressedHistory.some((item) => isOp(item))) {
-    console.log('NO OPS');
-    console.log(JSON.stringify(compressedHistory, null, 2));
     compressedHistory.push(lastAns.lastOp, lastAns.lastNumber);
-    console.log(JSON.stringify(lastAns, null, 2));
-    console.log(JSON.stringify(compressedHistory, null, 2));
   }
 
   // If it doesn't end with a number, infer the number from the current context
@@ -254,16 +248,9 @@ export class Calculator {
   }
 
   private get showInput() {
-    return this.history[this.history.length - 1] instanceof Fraction;
+    return this.history.at(-1) instanceof Fraction;
   }
 
-  // Local BODMAS context
-  // 1 + 2 / 3 * 4 + => 1 + ((2 / 3) * 4) + ? => show 3.666
-  // 1 + 2 / 3 * 4 * => 1 + (((2 / 3) * 4) * ?) => show 2.666
-  // 1 + 2 / 3 * 4 / => 1 + (((2 / 3) * 4) / ?) => show 2.666
-  // 1 + 2 / 3 / 4 / => 1 + (2 * 3 * ?) => show 6
-  // 1 + 2 * 3 * => 1 + (2 * 3 * ?) => show 6
-  // 1 + 2 * 3 + => 1 + (2 * 3) + ? => show 7
   private get currentValue() {
     return getLocalValue(this.currentEquation);
   }
