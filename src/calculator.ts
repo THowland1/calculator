@@ -230,21 +230,9 @@ export class Calculator {
 
   history: HistoryItem[];
 
-  ans: Fraction;
-
-  op: Op;
-
-  mode: Mode;
-
-  errored: boolean;
-
   constructor() {
     this.input = '0';
     this.history = [new Fraction({ top: 0, bottom: 1 })];
-    this.ans = new Fraction({ top: 0, bottom: 1 });
-    this.op = 'plus';
-    this.mode = 'fresh';
-    this.errored = false;
   }
 
   private get showInput() {
@@ -300,9 +288,6 @@ export class Calculator {
   toJSON() {
     return {
       input: this.input,
-      ans: this.ans,
-      op: this.op,
-      mode: this.mode,
       history: this.history,
       currentValue: this.currentValue,
       displayValue: this.displayValue,
@@ -324,12 +309,6 @@ export class Calculator {
       case '7':
       case '8':
       case '9':
-        switch (this.mode) {
-          case 'fresh-with-op':
-            this.mode = 'input';
-            break;
-        }
-
         if (this.input.replace('.', '').length < 9) {
           this.input = this.input === '0' ? key : this.input + key;
         }
@@ -356,19 +335,6 @@ export class Calculator {
           this.input = '0';
           this.history.push(key);
         }
-        this.op = key;
-        switch (this.mode) {
-          case 'fresh':
-            this.ans = new Fraction(Number(this.input));
-            this.input = '0';
-            this.mode = 'fresh-with-op';
-            break;
-          case 'input':
-            this.ans = new Fraction(Number(this.input));
-            this.input = '0';
-            this.mode = 'input-with-op';
-            break;
-        }
         break;
       case 'percent':
       case 'sign':
@@ -378,8 +344,6 @@ export class Calculator {
           } else {
             this.input = `-${this.input}`;
           }
-        } else {
-          this.ans.top = 0 - this.ans.top;
         }
         break;
       case 'equals':
@@ -387,10 +351,6 @@ export class Calculator {
 
       case 'c':
         this.input = '0';
-        this.ans = new Fraction({ top: 0, bottom: 1 });
-        this.op = 'plus';
-        this.mode = 'fresh';
-        this.errored = false;
         break;
     }
   }
