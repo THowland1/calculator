@@ -19,6 +19,7 @@ function render() {
     ?.toggleAttribute('data-selected', true);
 
   const span = document.createElement('span');
+  span.style.whiteSpace = 'nowrap';
   span.style.width = '100%';
   span.style.textAlign = 'end';
   span.innerHTML = calculator.displayValue;
