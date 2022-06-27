@@ -149,6 +149,22 @@ describe('Character limits', () => {
     calculator.press('7');
     expect(calculator.displayValue).toBe('1,234.56789');
   });
+  it('Should ignore values typed in after 9th number (even with minus)', async () => {
+    calculator.press('sign');
+    calculator.press('1');
+    calculator.press('2');
+    calculator.press('3');
+    calculator.press('4');
+    calculator.press('decimal');
+    calculator.press('5');
+    calculator.press('6');
+    calculator.press('7');
+    calculator.press('8');
+    calculator.press('9');
+    calculator.press('8');
+    calculator.press('7');
+    expect(calculator.displayValue).toBe(`${MINUS}1,234.56789`);
+  });
   it('Should truncate values to 9 significant figures (rounded up)', async () => {
     calculator.press('1');
     calculator.press('0');
@@ -215,6 +231,136 @@ describe('Clear button', () => {
     expect(calculator.displayValue).toBe('1');
     calculator.press('c');
     expect(calculator.displayValue).toBe('0');
+  });
+  describe("'AC'", () => {
+    describe('Should remove history so far', () => {
+      it('1 + 3 (AC) 4 = 4', async () => {
+        calculator.press('1');
+        calculator.press('plus');
+        calculator.press('3');
+        calculator.press('ac');
+        calculator.press('4');
+        calculator.press('equals');
+        expect(calculator.displayValue).toBe('4');
+      });
+    });
+    it('Should turn current value into 0', async () => {
+      calculator.press('1');
+      calculator.press('plus');
+      calculator.press('3');
+      calculator.press('ac');
+      expect(calculator.displayValue).toBe('0');
+    });
+    describe('Should remove ability to remember last operation when doing "double-equals"', () => {
+      it('1 + 3 = (4) (AC) = (0) = (0)', async () => {
+        calculator.press('1');
+        calculator.press('plus');
+        calculator.press('3');
+        calculator.press('equals');
+        expect(calculator.displayValue).toBe('4');
+        calculator.press('ac');
+        expect(calculator.displayValue).toBe('0');
+        calculator.press('equals');
+        expect(calculator.displayValue).toBe('0');
+      });
+    });
+  });
+  describe("'C'", () => {
+    it('Should reactivate last op', async () => {
+      calculator.press('1');
+      calculator.press('plus');
+      expect(calculator.activeOpButton).toBe('plus');
+      calculator.press('2');
+      expect(calculator.activeOpButton).toBe(null);
+      calculator.press('c');
+      expect(calculator.activeOpButton).toBe('plus');
+    });
+    describe('Should start typing next number if operation is dangling', () => {
+      it('1 + 3 + (C) = 4', async () => {
+        calculator.press('1');
+        calculator.press('plus');
+        calculator.press('3');
+        calculator.press('plus');
+        calculator.press('c');
+        expect(calculator.displayValue).toBe('0');
+        calculator.press('equals');
+        expect(calculator.displayValue).toBe('4');
+      });
+      it('1 + 3 * (C) = 1', async () => {
+        calculator.press('1');
+        calculator.press('plus');
+        calculator.press('3');
+        calculator.press('times');
+        calculator.press('c');
+        expect(calculator.displayValue).toBe('0');
+        calculator.press('equals');
+        expect(calculator.displayValue).toBe('1');
+      });
+    });
+    describe('Should turn current value into 0', () => {
+      it('1 + 3 (C) 4 = 5', async () => {
+        calculator.press('1');
+        calculator.press('plus');
+        calculator.press('3');
+        calculator.press('c');
+        expect(calculator.displayValue).toBe('0');
+        calculator.press('4');
+        calculator.press('equals');
+        expect(calculator.displayValue).toBe('5');
+      });
+      it('1 + 3 * 2 (C) 4 = 13', async () => {
+        calculator.press('1');
+        calculator.press('plus');
+        calculator.press('3');
+        calculator.press('times');
+        calculator.press('2');
+        calculator.press('c');
+        expect(calculator.displayValue).toBe('0');
+        calculator.press('4');
+        calculator.press('equals');
+        expect(calculator.displayValue).toBe('13');
+      });
+      it('1 + 3 = (4) (C) = (0) = (3)', async () => {
+        calculator.press('1');
+        calculator.press('plus');
+        calculator.press('3');
+        calculator.press('equals');
+        expect(calculator.displayValue).toBe('4');
+        calculator.press('c');
+        expect(calculator.displayValue).toBe('0');
+        calculator.press('equals');
+        expect(calculator.displayValue).toBe('3');
+      });
+    });
+  });
+  it("Should show 'AC' by default", async () => {
+    expect(calculator.showC).toBe(false);
+  });
+  it("Should still show 'AC' after inversion", async () => {
+    calculator.press('sign');
+    expect(calculator.showC).toBe(false);
+  });
+  it("Should still show 'AC' after clicking an op button", async () => {
+    calculator.press('sign');
+    expect(calculator.showC).toBe(false);
+  });
+  it("Should still show 'AC' after clicking percent button", async () => {
+    calculator.press('percent');
+    expect(calculator.showC).toBe(false);
+  });
+  it("Should start showing 'C' after a number is clicked", async () => {
+    calculator.press('1');
+    expect(calculator.showC).toBe(true);
+  });
+  it("Should start showing 'C' after decimal is clicked", async () => {
+    calculator.press('decimal');
+    expect(calculator.showC).toBe(true);
+  });
+  it("Should show 'AC' again after 'C' is clicked", async () => {
+    calculator.press('decimal');
+    expect(calculator.showC).toBe(true);
+    calculator.press('c');
+    expect(calculator.showC).toBe(false);
   });
 });
 

@@ -102,13 +102,18 @@ body {
 
 [data-key]::after {
   background-size: auto 40%;
-  background-position-x: calc(0.3 * var(--calculator-width) / 5);
+  background-position-x: min(50%, calc(0.3 * var(--calculator-width) / 5));
   background-position-y: center;
   background-repeat: no-repeat;
 }
 [data-key='c'] {
   @include button-light {
     background-image: url(./images/icons/000000/c.svg);
+  }
+}
+[data-key='ac'] {
+  @include button-light {
+    background-image: url(./images/icons/000000/ac.svg);
   }
 }
 [data-key='sign'] {

@@ -4,7 +4,8 @@ type Op = 'divide' | 'plus' | 'minus' | 'times';
 type Sign = 'sign';
 type Decimal = 'decimal';
 type Equals = 'equals';
-type Key = NumberKey | Op | Sign | Decimal | 'percent' | Equals | 'c';
+type Clear = 'c' | 'ac';
+type Key = NumberKey | Op | Sign | Decimal | 'percent' | Equals | Clear;
 type Mode =
   | 'fresh'
   | 'fresh-with-op'
@@ -20,6 +21,10 @@ interface Ans {
   lastOp: Op;
   ans: Fraction;
 }
+
+const DEFAULT_INPUT = '0';
+const DEFAULT_HISTORY = [new Fraction({ top: 0, bottom: 1 })];
+const DEFAULT_LASTOP = { op: 'plus' as Op, number: new Fraction(0) };
 
 function splitArray<TItem, TSeparator extends TItem = TItem>(
   arr: TItem[],
@@ -148,7 +153,7 @@ function evaluateEquation(
   let compressedHistory = [...history];
 
   // If no op, repeat the op from the last equation (or +0 if this is the first one)
-  if (!compressedHistory.some((item) => isOp(item))) {
+  if (!compressedHistory.some(isOp)) {
     compressedHistory.push(lastAns.lastOp, lastAns.lastNumber);
   }
 
@@ -157,10 +162,8 @@ function evaluateEquation(
     compressedHistory.push(getLocalValue(compressedHistory));
   }
 
-  const lastOp = compressedHistory.filter((o) => isOp(o)).at(-1) as Op;
-  const lastNumber = compressedHistory
-    .filter((o) => o instanceof Fraction)
-    .at(-1) as Fraction;
+  const lastOp = compressedHistory.filter(isOp).at(-1)!;
+  const lastNumber = compressedHistory.filter(isNumber).at(-1)!;
 
   const ops: [Op, (left: Fraction, right: Fraction) => Fraction][] = [
     ['divide', Fraction.divide],
@@ -238,11 +241,12 @@ export class Calculator {
   freshAns = false;
 
   activeOpButton: Op | null = null;
+  showC = false;
 
   constructor() {
-    this.input = '0';
-    this.history = [new Fraction({ top: 0, bottom: 1 })];
-    this.lastOp = { op: 'plus', number: new Fraction(0) };
+    this.input = DEFAULT_INPUT;
+    this.history = [...DEFAULT_HISTORY];
+    this.lastOp = { ...DEFAULT_LASTOP };
   }
 
   private get showInput() {
@@ -310,6 +314,16 @@ export class Calculator {
     this.freshAns = true;
   }
 
+  private syncLastOpWithInput() {
+    const lastItem = this.history.at(-1)!;
+    const inputAsFraction = new Fraction(Number(this.input));
+    if (lastItem instanceof Fraction) {
+      this.history[this.history.length - 1] = inputAsFraction;
+    } else {
+      this.history.push(inputAsFraction);
+    }
+  }
+
   press(key: Key) {
     const lastItem = this.history.at(-1)!;
 
@@ -329,18 +343,21 @@ export class Calculator {
       case '7':
       case '8':
       case '9':
-        if (this.input.replace('.', '').length < 9) {
-          this.input = this.input === '0' ? key : this.input + key;
+        this.showC = true;
+
+        if (this.input.replace('.', '').replace('-', '').length < 9) {
+          this.input =
+            this.input.replace('-', '') === '0'
+              ? this.input.replace('0', key)
+              : this.input + key;
         }
 
-        const inputAsFraction = new Fraction(Number(this.input));
-        if (lastItem instanceof Fraction) {
-          this.history[this.history.length - 1] = inputAsFraction;
-        } else {
-          this.history.push(inputAsFraction);
-        }
+        this.syncLastOpWithInput();
+
         break;
       case 'decimal':
+        this.showC = true;
+
         if (!this.input.includes('.')) {
           this.input += '.';
         }
@@ -374,20 +391,27 @@ export class Calculator {
         } else {
           this.input = `-${this.input}`;
         }
-        const inputAsFraction = new Fraction(Number(this.input));
-        if (lastItem instanceof Fraction) {
-          this.history[this.history.length - 1] = inputAsFraction;
-        } else {
-          this.history.push(inputAsFraction);
-        }
+
+        this.syncLastOpWithInput();
         break;
       }
 
       case 'equals':
         this.equal();
+        this.input = DEFAULT_INPUT;
 
+        break;
       case 'c':
-        this.input = '0';
+        this.showC = false;
+        this.input = DEFAULT_INPUT;
+        this.activeOpButton = this.history.filter(isOp).at(-1) ?? null;
+
+        this.syncLastOpWithInput();
+        break;
+      case 'ac':
+        this.input = DEFAULT_INPUT;
+        this.history = [...DEFAULT_HISTORY];
+        this.lastOp = { ...DEFAULT_LASTOP };
         break;
     }
   }

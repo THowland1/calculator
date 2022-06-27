@@ -18,6 +18,10 @@ function render() {
     .querySelector(`[data-key='${calculator.activeOpButton}']`)
     ?.toggleAttribute('data-selected', true);
 
+  document
+    .querySelector(`[data-key='c'], [data-key='ac']`)
+    ?.setAttribute('data-key', calculator.showC ? 'c' : 'ac');
+
   const span = document.createElement('span');
   span.style.whiteSpace = 'nowrap';
   span.style.width = '100%';
@@ -34,9 +38,8 @@ render();
 document
   .querySelectorAll<HTMLButtonElement>('button[data-key]')
   .forEach((btn) => {
-    const key = btn.dataset.key;
-    btn.addEventListener('click', () => {
-      calculator.press(key as '1');
+    btn.addEventListener('click', (e) => {
+      calculator.press((e.target as HTMLButtonElement).dataset.key as '1');
       render();
     });
   });
