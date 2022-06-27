@@ -228,27 +228,29 @@ function getLocalValue(history: EquationItem[]): Fraction {
 export class Calculator {
   input: string;
 
-  history: HistoryItem[];
+  history: EquationItem[];
+
+  lastOp: {
+    op: Op;
+    number: Fraction;
+  };
+
+  freshAns = false;
+
+  activeOpButton: Op | null = null;
 
   constructor() {
     this.input = '0';
     this.history = [new Fraction({ top: 0, bottom: 1 })];
+    this.lastOp = { op: 'plus', number: new Fraction(0) };
   }
 
   private get showInput() {
-    return this.history.at(-1) instanceof Fraction;
-  }
-
-  private get currentValue() {
-    return getLocalValue(this.currentEquation);
+    return !this.freshAns && this.history.at(-1) instanceof Fraction;
   }
 
   private get localValue() {
-    return getLocalValue(this.currentEquation);
-  }
-
-  private get currentEquation() {
-    return getCurrentEquation(this.history);
+    return getLocalValue(this.history);
   }
 
   get displayValue() {
@@ -289,14 +291,32 @@ export class Calculator {
     return {
       input: this.input,
       history: this.history,
-      currentValue: this.currentValue,
+      localValue: this.localValue,
       displayValue: this.displayValue,
-      currentEquation: getCurrentEquation(this.history),
     };
   }
 
+  private equal() {
+    const ans = evaluateEquation(this.history, {
+      ans: new Fraction(0),
+      lastNumber: this.lastOp.number,
+      lastOp: this.lastOp.op,
+    });
+    this.history = [ans.ans];
+    this.lastOp = {
+      op: ans.lastOp,
+      number: ans.lastNumber,
+    };
+    this.freshAns = true;
+  }
+
   press(key: Key) {
-    const lastItem = this.history[this.history.length - 1];
+    const lastItem = this.history.at(-1)!;
+
+    if (key !== 'sign') {
+      this.activeOpButton = null;
+      this.freshAns = false;
+    }
 
     switch (key) {
       case '0':
@@ -329,6 +349,8 @@ export class Calculator {
       case 'plus':
       case 'minus':
       case 'times':
+        this.activeOpButton = key;
+
         if (isOp(lastItem)) {
           this.history[this.history.length - 1] = key;
         } else {
@@ -337,17 +359,32 @@ export class Calculator {
         }
         break;
       case 'percent':
-      case 'sign':
-        if (this.showInput) {
-          if (this.input.startsWith('-')) {
-            this.input.replace('-', '');
-          } else {
-            this.input = `-${this.input}`;
-          }
+        // TODO - Add percent functionality
+        break;
+      case 'sign': {
+        if (this.freshAns) {
+          this.history[this.history.length - 1] = Fraction.times(
+            this.history[this.history.length - 1] as Fraction,
+            -1
+          );
+          break;
+        }
+        if (this.input.startsWith('-')) {
+          this.input = this.input.replace('-', '');
+        } else {
+          this.input = `-${this.input}`;
+        }
+        const inputAsFraction = new Fraction(Number(this.input));
+        if (lastItem instanceof Fraction) {
+          this.history[this.history.length - 1] = inputAsFraction;
+        } else {
+          this.history.push(inputAsFraction);
         }
         break;
+      }
+
       case 'equals':
-        this.history.push(key);
+        this.equal();
 
       case 'c':
         this.input = '0';

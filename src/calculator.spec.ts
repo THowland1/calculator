@@ -234,7 +234,7 @@ describe('Inversion', () => {
     calculator.press('sign');
     expect(calculator.displayValue).toBe(`${MINUS}2`);
   });
-  it('Should invert inversion if clicked again', async () => {
+  it('Should invert inversion of ans if clicked again', async () => {
     calculator.press('1');
     calculator.press('minus');
     calculator.press('3');
@@ -242,6 +242,16 @@ describe('Inversion', () => {
     expect(calculator.displayValue).toBe(`${MINUS}2`);
     calculator.press('sign');
     expect(calculator.displayValue).toBe('2');
+    calculator.press('sign');
+    expect(calculator.displayValue).toBe(`${MINUS}2`);
+  });
+  it('Should start typing next number (defaults to zero) when op is dangling and ± is pressed', async () => {
+    calculator.press('1');
+    calculator.press('plus');
+    calculator.press('3');
+    calculator.press('plus');
+    calculator.press('sign');
+    expect(calculator.displayValue).toBe(`${MINUS}0`);
   });
 });
 
@@ -511,6 +521,48 @@ describe('Ignoring certain values', () => {
     calculator.press('decimal');
     expect(calculator.displayValue).toBe('0.1');
   });
+
+  describe('active button', () => {
+    it.each(['plus', 'minus', 'times', 'divide'] as const)(
+      "Should highlight '%s' button right after being pressed",
+      async (op) => {
+        calculator.press(op);
+        expect(calculator.activeOpButton).toBe(op);
+      }
+    );
+    it.each(['plus', 'minus', 'times', 'divide'] as const)(
+      "Should keep '%s' button highlighted after the sign being inverted (which starts typing the next number, but doesn't turn the button off)",
+      async (op) => {
+        calculator.press(op);
+        expect(calculator.activeOpButton).toBe(op);
+        calculator.press('sign');
+        expect(calculator.activeOpButton).toBe(op);
+      }
+    );
+    it.each(['plus', 'minus', 'times', 'divide'] as const)(
+      "Should deactivate '%s' button after a number is typed",
+      async (op) => {
+        calculator.press(op);
+        expect(calculator.activeOpButton).toBe(op);
+        calculator.press('1');
+        expect(calculator.activeOpButton).toBe(null);
+      }
+    );
+    it.each([
+      ['divide', 'plus'],
+      ['divide', 'minus'],
+      ['divide', 'times'],
+      ['plus', 'divide'],
+    ] as const)(
+      "Should change from '%s' to '%s' button when pressed in succession",
+      async (op1, op2) => {
+        calculator.press(op1);
+        expect(calculator.activeOpButton).toBe(op1);
+        calculator.press(op2);
+        expect(calculator.activeOpButton).toBe(op2);
+      }
+    );
+  });
 });
 
 // test significant figure on comp[lex  numebrs]
@@ -541,3 +593,11 @@ describe('Ignoring certain values', () => {
 // AC
 
 // Improve lowest-common logic
+// Make 0 left aligned
+
+// strip mode stuff out
+
+// c
+// should reveal AC if freshly pressed
+// should reignite plus sign
+// AC should reset everything

@@ -9,21 +9,14 @@ document.addEventListener('touchmove', (e) => e.preventDefault(), {
 const displayEl = document.getElementById('display');
 
 function render() {
-  document.body.dataset.mode = calculator.mode;
-  document.body.dataset.op = calculator.op;
   localStorage.setItem('calculator', JSON.stringify(calculator.toJSON()));
 
   document
     .querySelectorAll('[data-selected]')
     .forEach((el) => el.toggleAttribute('data-selected', false));
-  if (
-    calculator.mode === 'fresh-with-op' ||
-    calculator.mode === 'input-with-op'
-  ) {
-    document
-      .querySelector(`[data-key='${calculator.op}']`)
-      ?.toggleAttribute('data-selected', true);
-  }
+  document
+    .querySelector(`[data-key='${calculator.activeOpButton}']`)
+    ?.toggleAttribute('data-selected', true);
 
   const span = document.createElement('span');
   span.style.width = '100%';
