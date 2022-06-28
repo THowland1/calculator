@@ -364,6 +364,30 @@ describe('Clear button', () => {
   });
 });
 
+describe('Percentage sign', () => {
+  // keep op sign highlighted
+  // 1 + 2 * 3 % = ?
+  // dangling values
+  // doing negative should start typing in a new number
+  it('1 % = 0.01', async () => {
+    calculator.press('1');
+    calculator.press('percent');
+    expect(calculator.displayValue).toBe('0.01');
+    calculator.press('equals');
+    expect(calculator.displayValue).toBe('0.01');
+  });
+  describe('Should wipe out percentaged display value when numbers are typed again', () => {
+    it('1 % 2 = 2', async () => {
+      calculator.press('1');
+      calculator.press('percent');
+      calculator.press('2');
+      expect(calculator.displayValue).toBe('2');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('2');
+    });
+  });
+});
+
 describe('Inversion', () => {
   it('Should invert input when inputting', async () => {
     calculator.press('1');

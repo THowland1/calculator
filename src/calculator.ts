@@ -230,6 +230,7 @@ function getLocalValue(history: EquationItem[]): Fraction {
 
 export class Calculator {
   input: string;
+  percenagedInput: Fraction | null;
 
   history: EquationItem[];
 
@@ -245,12 +246,17 @@ export class Calculator {
 
   constructor() {
     this.input = DEFAULT_INPUT;
+    this.percenagedInput = null;
     this.history = [...DEFAULT_HISTORY];
     this.lastOp = { ...DEFAULT_LASTOP };
   }
 
   private get showInput() {
-    return !this.freshAns && this.history.at(-1) instanceof Fraction;
+    return (
+      !this.freshAns &&
+      !this.percenagedInput &&
+      this.history.at(-1) instanceof Fraction
+    );
   }
 
   private get localValue() {
@@ -265,7 +271,8 @@ export class Calculator {
         (typeof after === 'string' ? `.${after}` : '')
       ).replace('-', '–');
     } else {
-      const value = Math.round(this.localValue.toNumber() * 1e8) / 1e8;
+      const fractionValue = this.percenagedInput ?? this.localValue;
+      const value = Math.round(fractionValue.toNumber() * 1e8) / 1e8;
       if (!isFinite(value)) {
         return 'Error';
       }
@@ -331,6 +338,9 @@ export class Calculator {
       this.activeOpButton = null;
       this.freshAns = false;
     }
+    if (key !== 'percent') {
+      this.percenagedInput = null;
+    }
 
     switch (key) {
       case '0':
@@ -376,7 +386,14 @@ export class Calculator {
         }
         break;
       case 'percent':
-        // TODO - Add percent functionality
+        if (isNumber(lastItem)) {
+          this.percenagedInput = Fraction.divide(this.localValue, 100);
+          this.history[this.history.length - 1] = this.percenagedInput;
+          this.input = DEFAULT_INPUT;
+        } else {
+          // this.input = '0';
+          // this.history.push(key);
+        }
         break;
       case 'sign': {
         if (this.freshAns) {
