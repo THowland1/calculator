@@ -22,6 +22,10 @@ interface Ans {
   ans: Fraction;
 }
 
+function getLastItem<T>(arr: T[]): T {
+  return arr[arr.length - 1];
+}
+
 const DEFAULT_INPUT = '0';
 const DEFAULT_HISTORY = [new Fraction({ top: 0, bottom: 1 })];
 const DEFAULT_LASTOP = { op: 'plus' as Op, number: new Fraction(0) };
@@ -35,7 +39,7 @@ function splitArray<TItem, TSeparator extends TItem = TItem>(
     if (item === separator) {
       result.push([]);
     } else {
-      result.at(-1)!.push(item as Exclude<TItem, TSeparator>);
+      getLastItem(result).push(item as Exclude<TItem, TSeparator>);
     }
   });
 
@@ -158,12 +162,12 @@ function evaluateEquation(
   }
 
   // If it doesn't end with a number, infer the number from the current context
-  if (isOp(compressedHistory.at(-1)!)) {
+  if (isOp(getLastItem(compressedHistory))) {
     compressedHistory.push(getLocalValue(compressedHistory));
   }
 
-  const lastOp = compressedHistory.filter(isOp).at(-1)!;
-  const lastNumber = compressedHistory.filter(isNumber).at(-1)!;
+  const lastOp = getLastItem(compressedHistory.filter(isOp));
+  const lastNumber = getLastItem(compressedHistory.filter(isNumber));
 
   const ops: [Op, (left: Fraction, right: Fraction) => Fraction][] = [
     ['divide', Fraction.divide],
@@ -255,7 +259,7 @@ export class Calculator {
     return (
       !this.freshAns &&
       !this.percenagedInput &&
-      this.history.at(-1) instanceof Fraction
+      getLastItem(this.history) instanceof Fraction
     );
   }
 
@@ -322,7 +326,7 @@ export class Calculator {
   }
 
   private syncLastOpWithInput() {
-    const lastItem = this.history.at(-1)!;
+    const lastItem = getLastItem(this.history);
     const inputAsFraction = new Fraction(Number(this.input));
     if (lastItem instanceof Fraction) {
       this.history[this.history.length - 1] = inputAsFraction;
@@ -332,7 +336,7 @@ export class Calculator {
   }
 
   press(key: Key) {
-    const lastItem = this.history.at(-1)!;
+    const lastItem = getLastItem(this.history);
 
     if (key !== 'sign' && key !== 'percent') {
       this.activeOpButton = null;
@@ -424,7 +428,7 @@ export class Calculator {
       case 'c':
         this.showC = false;
         this.input = DEFAULT_INPUT;
-        this.activeOpButton = this.history.filter(isOp).at(-1) ?? null;
+        this.activeOpButton = getLastItem(this.history.filter(isOp)) ?? null;
 
         this.syncLastOpWithInput();
         break;
