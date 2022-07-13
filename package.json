@@ -2,7 +2,7 @@
   "name": "calculator",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "default": "index.html",
   "scripts": {
     "test": "jest",
     "dev": "parcel src/index.html",
