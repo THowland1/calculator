@@ -1,22 +1,35 @@
-$width: 400px;
 $button-column-count: 4;
 $button-row-count: 5;
 $button-gap: 50px;
-$button-diameter: ($width - ($button-gap * $button-column-count)) /
-  $button-column-count;
 
 :root {
-  --calculator-width: 400px;
-  --calculator-height: 700px;
+  --calculator-width: min(375px, 100vw);
+  --calculator-height: min(calc(var(--calculator-width) * 2), 100vh);
+
+  --calculator-height-unitless: 700; // to be overwritten instantly
+  --innerheight-unitless: 700; // to be overwritten instantly
+
+  --scale: 1;
+  &.big {
+    --scale: calc(
+      (var(--innerheight-unitless) * 0.9) / var(--calculator-height-unitless)
+    );
+  }
 }
 
 html,
 body {
   inset: 0;
   position: absolute;
+  margin: 0;
 }
 body {
-  background-color: rgb(62, 62, 62);
+}
+
+.calculator-container {
+  position: absolute;
+  inset: 0;
+  background-color: black;
   user-select: none;
   -webkit-user-select: none;
   margin: auto;
@@ -33,6 +46,8 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
+  transition: transform 0.6s cubic-bezier(0.14, 0.38, 0.39, 1);
+  transform: scale(var(--scale));
 }
 
 .display {
@@ -55,7 +70,18 @@ body {
   padding: calc(var(--calculator-width) / 25);
 }
 
+@mixin button {
+  &::after {
+    background-size: auto 40%;
+    background-position-x: min(50%, calc(0.3 * var(--calculator-width) / 5));
+    background-position-y: center;
+    background-repeat: no-repeat;
+  }
+}
+
 @mixin button-light {
+  @include button;
+
   &::after {
     @content;
     background-color: #a5a5a5;
@@ -67,6 +93,8 @@ body {
   }
 }
 @mixin button-mid {
+  @include button;
+
   &::after {
     @content;
     background-color: #333333;
@@ -78,6 +106,8 @@ body {
   }
 }
 @mixin button-primary {
+  @include button;
+
   &::after {
     @content;
     background-color: #f1a33b;
@@ -89,6 +119,8 @@ body {
   }
 }
 @mixin button-primary-inverted {
+  @include button;
+
   &::after {
     @content;
     color: #f1a33b;
@@ -100,12 +132,36 @@ body {
   }
 }
 
-[data-key]::after {
-  background-size: auto 40%;
-  background-position-x: min(50%, calc(0.3 * var(--calculator-width) / 5));
-  background-position-y: center;
-  background-repeat: no-repeat;
+#grow,
+#shrink {
+  z-index: 1;
+  height: calc(var(--calculator-width) / 7);
+  width: calc(var(--calculator-width) / 7);
+  position: absolute;
+  bottom: calc(var(--calculator-width) / 10);
+  right: calc(var(--calculator-width) / 10);
+
+  &.hidden {
+    display: none;
+  }
 }
+@media screen and (max-width: 600px) {
+  #grow,
+  #shrink {
+    display: none;
+  }
+}
+#grow {
+  @include button-mid {
+    background-image: url(./images/icons/999999/grow.svg);
+  }
+}
+#shrink {
+  @include button-mid {
+    background-image: url(./images/icons/999999/shrink.svg);
+  }
+}
+
 [data-key='c'] {
   @include button-light {
     background-image: url(./images/icons/000000/c.svg);

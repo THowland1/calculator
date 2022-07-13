@@ -334,8 +334,11 @@ export class Calculator {
   press(key: Key) {
     const lastItem = this.history.at(-1)!;
 
-    if (key !== 'sign') {
+    if (key !== 'sign' && key !== 'percent') {
       this.activeOpButton = null;
+    }
+
+    if (key !== 'sign') {
       this.freshAns = false;
     }
     if (key !== 'percent') {

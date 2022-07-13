@@ -43,3 +43,29 @@ document
       render();
     });
   });
+
+const growBtn = document.querySelector('#grow')!;
+const shrinkBtn = document.querySelector('#shrink')!;
+const root = document.querySelector(':root') as HTMLElement;
+const calulatorDiv = document.querySelector('.calculator') as HTMLElement;
+
+growBtn!.addEventListener('click', (e) => {
+  growBtn.classList.toggle('hidden', true);
+  shrinkBtn.classList.toggle('hidden', false);
+  root.classList.toggle('big', true);
+});
+shrinkBtn!.addEventListener('click', (e) => {
+  growBtn.classList.toggle('hidden', false);
+  shrinkBtn.classList.toggle('hidden', true);
+  root.classList.toggle('big', false);
+});
+
+function resetWindowHeight() {
+  root.style.setProperty('--innerheight-unitless', String(window.innerHeight));
+  root.style.setProperty(
+    '--calculator-height-unitless',
+    String(calulatorDiv.clientHeight)
+  );
+}
+resetWindowHeight();
+addEventListener('resize', resetWindowHeight);

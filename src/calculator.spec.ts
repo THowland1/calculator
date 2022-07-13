@@ -367,8 +367,8 @@ describe('Clear button', () => {
 describe('Percentage sign', () => {
   // keep op sign highlighted
   // 1 + 2 * 3 % = ?
+  // 1+%+1 = 2
   // dangling values
-  // doing negative should start typing in a new number
   it('1 % = 0.01', async () => {
     calculator.press('1');
     calculator.press('percent');
@@ -386,6 +386,65 @@ describe('Percentage sign', () => {
       expect(calculator.displayValue).toBe('2');
     });
   });
+  describe('Should calculate "dangling" value', () => {
+    it('1 + 2 + % = 3.06', async () => {
+      calculator.press('1');
+      expect(calculator.displayValue).toBe('1');
+      calculator.press('plus');
+      expect(calculator.displayValue).toBe('1');
+      calculator.press('2');
+      expect(calculator.displayValue).toBe('2');
+      calculator.press('plus');
+      expect(calculator.displayValue).toBe('3');
+      calculator.press('percent');
+      expect(calculator.displayValue).toBe('0.06');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('3.03');
+    });
+    it('1 + 2 * % = 1.04', async () => {
+      calculator.press('1');
+      expect(calculator.displayValue).toBe('1');
+      calculator.press('plus');
+      expect(calculator.displayValue).toBe('1');
+      calculator.press('2');
+      expect(calculator.displayValue).toBe('2');
+      calculator.press('times');
+      expect(calculator.displayValue).toBe('2');
+      calculator.press('percent');
+      expect(calculator.displayValue).toBe('0.04');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('1.04');
+    });
+    it('1 + 2 * 3 / % = 101', async () => {
+      calculator.press('1');
+      expect(calculator.displayValue).toBe('1');
+      calculator.press('plus');
+      expect(calculator.displayValue).toBe('1');
+      calculator.press('2');
+      expect(calculator.displayValue).toBe('2');
+      calculator.press('times');
+      expect(calculator.displayValue).toBe('2');
+      calculator.press('3');
+      expect(calculator.displayValue).toBe('3');
+      calculator.press('divide');
+      expect(calculator.displayValue).toBe('6');
+      calculator.press('percent');
+      expect(calculator.displayValue).toBe('0.06');
+      calculator.press('equals');
+      expect(calculator.displayValue).toBe('101');
+    });
+  });
+  describe('Op sign should stay highlighted', () => {
+    it('1 + % = 1.01', async () => {
+      calculator.press('1');
+      calculator.press('plus');
+      expect(calculator.activeOpButton).toBe('plus');
+      calculator.press('percent');
+      expect(calculator.activeOpButton).toBe('plus');
+    });
+  });
+
+  // rememebr from  last equation
 });
 
 describe('Inversion', () => {
@@ -767,7 +826,6 @@ describe('Ignoring certain values', () => {
 
 // strip mode stuff out
 
-// c
-// should reveal AC if freshly pressed
-// should reignite plus sign
-// AC should reset everything
+// backspace
+// only change inout numbers
+// reignite the op button
