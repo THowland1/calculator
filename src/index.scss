@@ -4,7 +4,7 @@ $button-gap: 50px;
 
 :root {
   --calculator-width: min(375px, 100vw);
-  --calculator-height: min(calc(var(--calculator-width) * 2), 100vh);
+  --calculator-height: min(calc(var(--calculator-width) * 1.7), 100vh);
 
   --calculator-height-unitless: 700; // to be overwritten instantly
   --innerheight-unitless: 700; // to be overwritten instantly
