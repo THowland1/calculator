@@ -1,7 +1,7 @@
 import { manifest, version } from '@parcel/service-worker';
 
 const OFFLINE_URL = 'index.html';
-const version = process.env.BUILD_TIME;
+let version = process.env.BUILD_TIME;
 
 self.addEventListener('install', function (event) {
   console.log('[ServiceWorker] Install');
