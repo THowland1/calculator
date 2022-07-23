@@ -5,8 +5,8 @@
   "default": "index.html",
   "scripts": {
     "test": "jest",
-    "dev": "parcel src/index.html",
-    "build": "parcel build src/index.html"
+    "dev": "BUILD_TIME=$(date) parcel src/index.html",
+    "build": "BUILD_TIME=$(date) parcel build src/index.html"
   },
   "keywords": [],
   "author": "",

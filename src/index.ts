@@ -3,6 +3,8 @@ import { Calculator } from './calculator';
 // TODO stop gorwing
 // TODO fade button after click
 
+document.getElementById('version')!.innerText = process.env.BUILD_TIME ?? '';
+
 const calculator = new Calculator();
 
 document.addEventListener('touchmove', (e) => e.preventDefault(), {
