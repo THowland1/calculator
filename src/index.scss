@@ -120,7 +120,7 @@ body {
 
   &::after {
     @content;
-    background-color: #f1a33b;
+    background-color: #ff9f06;
     color: #ffffff;
   }
 
@@ -133,7 +133,7 @@ body {
 
   &::after {
     @content;
-    color: #f1a33b;
+    color: #ff9f06;
     background-color: #ffffff;
   }
 
@@ -198,7 +198,7 @@ body {
   }
   &[data-selected] {
     @include button-primary-inverted {
-      background-image: url(./images/icons/F1A33B/divide.svg);
+      background-image: url(./images/icons/FF9F06/divide.svg);
     }
   }
 }
@@ -224,7 +224,7 @@ body {
   }
   &[data-selected] {
     @include button-primary-inverted {
-      background-image: url(./images/icons/F1A33B/times.svg);
+      background-image: url(./images/icons/FF9F06/times.svg);
     }
   }
 }
@@ -250,7 +250,7 @@ body {
   }
   &[data-selected] {
     @include button-primary-inverted {
-      background-image: url(./images/icons/F1A33B/minus.svg);
+      background-image: url(./images/icons/FF9F06/minus.svg);
     }
   }
 }
@@ -276,7 +276,7 @@ body {
 
   &[data-selected] {
     @include button-primary-inverted {
-      background-image: url(./images/icons/F1A33B/plus.svg);
+      background-image: url(./images/icons/FF9F06/plus.svg);
     }
   }
 }
