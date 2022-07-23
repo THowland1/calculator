@@ -77,6 +77,10 @@ body {
     background-position-y: center;
     background-repeat: no-repeat;
   }
+  &.pressed::after {
+    transition-duration: 0.3s;
+    background-color: #d9d9d9;
+  }
 }
 
 @mixin button-light {
@@ -88,7 +92,7 @@ body {
     color: #000000;
   }
 
-  &:hover::after {
+  &.pressed::after {
     background-color: #d9d9d9;
   }
 }
@@ -101,7 +105,7 @@ body {
     color: #ffffff;
   }
 
-  &:hover::after {
+  &.pressed::after {
     background-color: #737373;
   }
 }
@@ -114,7 +118,7 @@ body {
     color: #ffffff;
   }
 
-  &:hover::after {
+  &.pressed::after {
     background-color: #f4c995;
   }
 }
@@ -127,7 +131,7 @@ body {
     background-color: #ffffff;
   }
 
-  &:hover::after {
+  &.pressed::after {
     background-color: #f4c995;
   }
 }
@@ -302,7 +306,7 @@ button {
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: background-color 0.3s;
+    transition: background-color 1s;
     height: 100%;
     width: 100%;
     border-radius: var(--calculator-width);

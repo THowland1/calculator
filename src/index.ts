@@ -1,5 +1,8 @@
 import { Calculator } from './calculator';
 
+// TODO stop gorwing
+// TODO fade button after click
+
 const calculator = new Calculator();
 
 document.addEventListener('touchmove', (e) => e.preventDefault(), {
@@ -33,16 +36,57 @@ function render() {
   span.style.fontSize = `${(100 * span.offsetWidth) / span.scrollWidth}%`;
 }
 
+const allButtons =
+  document.querySelectorAll<HTMLButtonElement>('button[data-key]');
+
 render();
 
-document
-  .querySelectorAll<HTMLButtonElement>('button[data-key]')
-  .forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      calculator.press((e.target as HTMLButtonElement).dataset.key as '1');
-      render();
-    });
+function clearAllButtonsPressedState() {
+  allButtons.forEach((btn) => {
+    btn.classList.toggle('pressed', false);
   });
+}
+function pressButtonAtCoordinates(evt: PointerEvent) {
+  const el = document.elementFromPoint(evt.x, evt.y);
+  if (el instanceof HTMLButtonElement) {
+    el.classList.toggle('pressed', true);
+  }
+}
+document.addEventListener('pointerdown', (touch) => {
+  clearAllButtonsPressedState();
+  pressButtonAtCoordinates(touch);
+});
+let lastbounds: [left: number, bottom: number, right: number, top: number] = [
+  0, 0, 0, 0,
+];
+document.addEventListener('pointermove', (touch) => {
+  const { x, y } = touch;
+  const [l, b, r, t] = lastbounds;
+  if (x > l && x < r && y > t && y < b) {
+    return;
+  }
+  const el = document.elementFromPoint(x, y);
+  if (el instanceof HTMLButtonElement) {
+    const { top, bottom, left, right } = el.getBoundingClientRect();
+    console.log({ top, bottom, left, right });
+
+    lastbounds = [left, bottom, right, top];
+  }
+  clearAllButtonsPressedState();
+  pressButtonAtCoordinates(touch);
+});
+document.addEventListener('pointerup', (touch) => {
+  clearAllButtonsPressedState();
+
+  const el = document.elementFromPoint(touch.x, touch.y);
+  if (el instanceof HTMLButtonElement) {
+    const key = el.dataset.key;
+    if (typeof key === 'string') {
+      calculator.press(key as '1');
+      render();
+    }
+  }
+});
 
 const growBtn = document.querySelector('#grow')!;
 const shrinkBtn = document.querySelector('#shrink')!;
