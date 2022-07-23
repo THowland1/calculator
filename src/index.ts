@@ -5,6 +5,17 @@ import { Calculator } from './calculator';
 
 document.getElementById('version')!.innerText = process.env.BUILD_TIME ?? '';
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register(new URL('./serviceworker.js', import.meta.url), {
+        type: 'module',
+      })
+      .then((reg) => console.log('Success: ', reg.scope))
+      .catch((err) => console.log('Failure: ', err));
+  });
+}
+
 const calculator = new Calculator();
 
 document.addEventListener('touchmove', (e) => e.preventDefault(), {
