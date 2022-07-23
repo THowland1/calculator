@@ -78,7 +78,7 @@ body {
     background-repeat: no-repeat;
   }
   &.pressed::after {
-    transition-duration: 0.3s;
+    transition-duration: 0.15s;
     background-color: #d9d9d9;
   }
 }
@@ -306,7 +306,7 @@ button {
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: background-color 1s;
+    transition: background-color 1.5s;
     height: 100%;
     width: 100%;
     border-radius: var(--calculator-width);
