@@ -2,6 +2,13 @@ $button-column-count: 4;
 $button-row-count: 5;
 $button-gap: 50px;
 
+@mixin inset($val) {
+  top: $val;
+  right: $val;
+  bottom: $val;
+  left: $val;
+}
+
 :root {
   --calculator-width: min(375px, 100vw);
   --calculator-height: min(calc(var(--calculator-width) * 1.7), 100vh);
@@ -19,7 +26,7 @@ $button-gap: 50px;
 
 html,
 body {
-  inset: 0;
+  @include inset(0);
   position: absolute;
   margin: 0;
 }
@@ -28,7 +35,7 @@ body {
 
 .calculator-container {
   position: absolute;
-  inset: 0;
+  @include inset(0);
   background-color: black;
   user-select: none;
   -webkit-user-select: none;
